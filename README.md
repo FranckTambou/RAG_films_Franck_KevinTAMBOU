@@ -23,11 +23,11 @@ Système RAG (Retrieval-Augmented Generation) capable de recommander des films e
 # Activer l'environnement
 venv\Scripts\activate
 
-# Remplir .env avec votre clé Groq
+# Remplir .env avec notre clé Groq
 GROQ_API_KEY=votre_clé_ici
 ```
 
-## 2. Indexation (une seule fois)
+## 2. Indexation
 ```bash
 python indexation.py
 ```
