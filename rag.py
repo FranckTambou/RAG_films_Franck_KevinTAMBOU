@@ -83,7 +83,42 @@ def rechercher_films(question, k=4):
     return resultats
 
 
-#Générer la réponse avec Groq
+#Recherche avec filtre de langue
+def rechercher_films_avec_langue(question, langue=None, k=4):
+    """
+    Recherche les k films les plus pertinents avec filtre optionnel par langue.
+    
+    Args:
+        question: la question de l'utilisateur
+        langue: code langue ('en', 'fr', etc.) ou None pour pas de filtre
+        k: nombre de résultats à retourner
+    
+    Returns:
+        Liste de films filtrés par langue
+    """
+    #1-Recherche normale
+    resultats = rechercher_films(question, k=10)
+    
+    #2-Filtre par langue si demandé
+    if langue and langue.strip():
+        resultats_filtres = []
+        for r in resultats:
+            film = r["film"]
+            langue_film = film.get('release_date', '')[:4]  # Utiliser release_date comme proxy
+            
+            #Vérification de la langue originale
+            if 'original_language' in film:
+                langue_film = film.get('original_language', '').lower()
+                if langue_film == langue.lower():
+                    resultats_filtres.append(r)
+        
+        resultats = resultats_filtres
+    
+    #3-Retourner les k meilleurs
+    return resultats[:k]
+
+
+#Génération de la réponse avec Groq
 
 def generer_reponse(question, resultats):
     """
@@ -157,7 +192,7 @@ Basé sur les films trouvés ci-dessus, fais une recommandation pertinente et ar
     return response.choices[0].message.content
 
 
-#BOUCLE PRINCIPALE : Interface de questions-réponses
+#Interface de questions-réponses
 print("\n" + "=" * 80)
 print("✅ Système prêt ! Posez vos questions de recommandation.")
 print("=" * 80)
@@ -182,8 +217,17 @@ while True:
     
     print("\n🔍 Recherche en cours...")
     
-    #Recherche des films pertinents
-    resultats = rechercher_films(question, k=4)
+    #Demander la langue (c'est optionnel)
+    langue_input = input("🌍 Langue (en/fr/autre ou appuyez Entrée pour tous) : ").strip()
+    
+    #Rechercher avec filtre
+    resultats = rechercher_films_avec_langue(question, langue=langue_input, k=4)
+    
+    #rechercher sans filtre si pas de réponses avec filtre
+    if not resultats and langue_input:
+        print("⚠️ Aucun film trouvé pour cette langue.")
+        print("🔄 Recherche sans filtre...")
+        resultats = rechercher_films(question, k=4)
     
     print(f"✅ {len(resultats)} films trouvés !")
     
